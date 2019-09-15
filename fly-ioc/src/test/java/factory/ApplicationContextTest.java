@@ -66,10 +66,6 @@ public class ApplicationContextTest {
     }
 
     @Test
-    public void testGetBean() {
-    }
-
-    @Test
     public void destroy() {
         factory.destroy();
         assert factory.getBean(TestClass.class)==null;

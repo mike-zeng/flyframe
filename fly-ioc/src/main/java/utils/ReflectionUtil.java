@@ -15,8 +15,7 @@ import java.util.jar.JarFile;
  * @Date 2019/9/11 20:15
  */
 public class ReflectionUtil {
-    private ReflectionUtil() {
-    }
+    private ReflectionUtil() {}
 
     /**
      * 从包路径下获取类
@@ -24,8 +23,7 @@ public class ReflectionUtil {
      * @return 类集合
      */
     public static Set<Class<?>> getClassFromPackagePath(String pack) {
-        Set<Class<?>> classes = new LinkedHashSet<Class<?>>();
-        boolean recursive = true;
+        Set<Class<?>> classes = new LinkedHashSet<>();
         String packageName = pack;
         String packageDirName = packageName.replace('.', '/');
         
@@ -42,8 +40,7 @@ public class ReflectionUtil {
                     // 获取包的物理路径
                     String filePath = URLDecoder.decode(url.getFile(), "UTF-8");
                     // 以文件的方式扫描整个包下的文件 并添加到集合中
-                    findAndAddClassesInPackageByFile(packageName, filePath,
-                            recursive, classes);
+                    findAndAddClassesInPackageByFile(packageName, filePath, classes);
                 } else if ("jar".equals(protocol)) {
                     // 如果是jar包文件
                     System.err.println("jar类型的扫描");
@@ -67,7 +64,7 @@ public class ReflectionUtil {
                                     packageName = name.substring(0, idx)
                                             .replace('/', '.');
                                 }
-                                if ((idx != -1) || recursive) {
+                                if (idx != -1) {
                                     if (name.endsWith(".class")
                                             && !entry.isDirectory()) {
                                         String className = name.substring(
@@ -98,28 +95,24 @@ public class ReflectionUtil {
 
     /**
      * 搜索并将包内所有的类添加到集合中
-     * @param packageName 报名
+     * @param packageName 包名
      * @param packagePath 包路径
-     * @param recursive 是否递归搜索
      * @param classes 类集合
      */
     private static void findAndAddClassesInPackageByFile(String packageName,
-                                                        String packagePath, final boolean recursive, Set<Class<?>> classes) {
+                                                        String packagePath, Set<Class<?>> classes) {
         File dir = new File(packagePath);
         if (!dir.exists() || !dir.isDirectory()) {
             return;
         }
-        File[] dirfiles = dir.listFiles(new FileFilter() {
-            public boolean accept(File file) {
-                return (recursive && file.isDirectory())
-                        || (file.getName().endsWith(".class"));
-            }
-        });
+        File[] dirfiles = dir.listFiles(file -> (file.isDirectory())
+                || (file.getName().endsWith(".class")));
         // 循环所有文件
+        assert dirfiles != null;
         for (File file : dirfiles) {
             if (file.isDirectory()) {
                 findAndAddClassesInPackageByFile(packageName + "."
-                                + file.getName(), file.getAbsolutePath(), recursive,
+                                + file.getName(), file.getAbsolutePath(),
                         classes);
             } else {
                 // 如果是java类文件 去掉后面的.class 只留下类名
@@ -135,6 +128,12 @@ public class ReflectionUtil {
         }
     }
 
+    /**
+     * 将字符串数组转化为指定的数据类型
+     * @param str 字符串数组
+     * @param type 数据类型
+     * @return 对象
+     */
     public static Object stringArrayToOtherTypeData(String[] str,String type){
         if (str==null||str.length==0){
             return null;

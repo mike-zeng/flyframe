@@ -2,7 +2,9 @@ package factory;
 
 import annotation.Autowired;
 import annotation.AutowiredEnum;
+import exception.BeanFactoryException;
 import exception.InjectionException;
+import exception.enums.BeanFactoryExceptionEnum;
 import exception.enums.InjectionExceptionEnum;
 import meta.BeanDefinition;
 import meta.Depend;
@@ -36,11 +38,24 @@ public class ApplicationContext extends BaseBeanFactory {
         if (beanNameBeanDefinitionMap.get(beanName)==null){
             return null;
         }
+        if (singletonCache.getBeanForBeanName(beanName)!=null){
+            return singletonCache.getBeanForBeanName(beanName);
+        }
         BeanDefinition beanDefinition = beanNameBeanDefinitionMap.get(beanName);
         if (beanDefinition!=null){
-            return parserBeanDefinitionToObject(beanDefinition);
+            Object o = null;
+            try {
+                o = parserBeanDefinitionToObject(beanDefinition);
+            } catch (BeanFactoryException e) {
+                e.printStackTrace();
+            }
+            if (beanDefinition.isSingleton()){
+                singletonCache.putBean(beanName,o);
+            }
+            return o;
+        }else {
+            return null;
         }
-        return null;
     }
 
     @Override
@@ -48,12 +63,24 @@ public class ApplicationContext extends BaseBeanFactory {
         if (!beanClassBeanDefinitionMap.containsKey(tClass)){
             return null;
         }
+        if (singletonCache.getBeanForBeanClass(tClass)!=null){
+            return singletonCache.getBeanForBeanClass(tClass);
+        }
         BeanDefinition definition = beanClassBeanDefinitionMap.get(tClass);
-        Object o = parserBeanDefinitionToObject(definition);
-        return (T)o;
+        Object o;
+        try {
+            o = parserBeanDefinitionToObject(definition);
+        } catch (BeanFactoryException e) {
+            e.printStackTrace();
+            return null;
+        }
+        if (definition.isSingleton()){
+            singletonCache.putBean((T)(o));
+        }
+        return (T) o;
     }
 
-    private Object parserBeanDefinitionToObject(BeanDefinition beanDefinition){
+    private Object parserBeanDefinitionToObject(BeanDefinition beanDefinition) throws BeanFactoryException {
         try {
             // 创建对象
             Object object = createObject(beanDefinition);
@@ -65,10 +92,9 @@ public class ApplicationContext extends BaseBeanFactory {
             // 进行value注入
             valueInjection(object,depends);
             return object;
-        } catch (Exception e) {
-            e.printStackTrace();
+        }catch (Exception e) {
+            throw new BeanFactoryException(BeanFactoryExceptionEnum.BEAN_DEFINITION_PARSER_FAILED);
         }
-        return null;
     }
 
     /**
@@ -120,7 +146,12 @@ public class ApplicationContext extends BaseBeanFactory {
             List<Object> args=new ArrayList<>();
             if (count==parameters.size()){
                 for (String parameter : parameters) {
-                    Object o = parserBeanDefinitionToObject(beanNameBeanDefinitionMap.get(parameter));
+                    Object o = null;
+                    try {
+                        o = parserBeanDefinitionToObject(beanNameBeanDefinitionMap.get(parameter));
+                    } catch (BeanFactoryException e) {
+                        e.printStackTrace();
+                    }
                     args.add(o);
                 }
                 // 参数准备好了
@@ -160,7 +191,12 @@ public class ApplicationContext extends BaseBeanFactory {
             Method method = methodMap.get(depend.getDependKey());
             BeanDefinition definition = beanNameBeanDefinitionMap.get(depend.getDependValue());
             if (method!=null&&definition!=null){
-                Object arg = parserBeanDefinitionToObject(definition);
+                Object arg = null;
+                try {
+                    arg = parserBeanDefinitionToObject(definition);
+                } catch (BeanFactoryException e) {
+                    e.printStackTrace();
+                }
                 method.invoke(target,arg);
             }
         }
@@ -239,5 +275,4 @@ public class ApplicationContext extends BaseBeanFactory {
            throw new InjectionException(InjectionExceptionEnum.AUTOWIRED_INJECTION_FAILED);
         }
     }
-
 }

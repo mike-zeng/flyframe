@@ -3,6 +3,8 @@ package factory;
 import annotation.Component;
 import annotation.Service;
 import annotation.Value;
+import cache.Cache;
+import cache.SingletonCache;
 import meta.BeanDefinition;
 import meta.Depend;
 import meta.DependEnum;
@@ -31,15 +33,14 @@ public abstract class BaseBeanFactory implements Factory{
 
     ConcurrentHashMap<String,BeanDefinition> beanNameBeanDefinitionMap=new ConcurrentHashMap<String, BeanDefinition>();
     ConcurrentHashMap<Class<?>,BeanDefinition> beanClassBeanDefinitionMap=new ConcurrentHashMap<Class<?>, BeanDefinition>();
+    Cache singletonCache=new SingletonCache();
 
     BaseBeanFactory(List<String> scannerPackageList) throws Exception {
         // 负责从包中扫描出带注解的类，然后转化为BeanDefinition对象
         scanner=new PackageScanner(scannerPackageList);
         List<Class<?>> classes=loadClass();
         List<BeanDefinition> beanDefinitions=converterBeanClassToBeanDefinition(classes);
-        if (beanDefinitions!=null){
-            loadBeanDefinition(beanDefinitions);
-        }
+        loadBeanDefinition(beanDefinitions);
         // 校验BeanDefinition之间的关系是否符合容器要求
         if (!verify()){
             throw new Exception();
@@ -62,6 +63,16 @@ public abstract class BaseBeanFactory implements Factory{
         for (BeanDefinition beanDefinition : beanDefinitions) {
             beanNameBeanDefinitionMap.put(beanDefinition.getBeanName(),beanDefinition);
             beanClassBeanDefinitionMap.put(beanDefinition.getBeanClass(),beanDefinition);
+        }
+        // 加载非懒加载的对象
+        for (BeanDefinition beanDefinition : beanDefinitions) {
+           if (!beanDefinition.isLazy()){
+               Object o = doGetBean(beanDefinition.getBeanClass());
+               // 如果是单例对象则缓存
+               if (beanDefinition.isSingleton()){
+                   singletonCache.putBean(o);
+               }
+           }
         }
     }
 
@@ -150,18 +161,6 @@ public abstract class BaseBeanFactory implements Factory{
         beanDefinition.setDepends(dependList);
         return beanDefinition;
     }
-
-
-    private List<Annotation> filterAnnotationByType(Annotation[] annotations,Class<?> tClass){
-        List<Annotation> ret=new ArrayList<>();
-        for (Annotation annotation : annotations) {
-           if (annotation.getClass().equals(tClass)){
-                ret.add(annotation);
-           }
-        }
-        return ret;
-    }
-
 
     /**
      * 通过包扫描器扫描出所有的包
