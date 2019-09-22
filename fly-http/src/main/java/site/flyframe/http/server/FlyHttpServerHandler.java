@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import site.flyframe.http.request.FlyHttpRequest;
+import site.flyframe.http.request.Session;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaderValues.CLOSE;
@@ -45,6 +46,9 @@ public class FlyHttpServerHandler extends SimpleChannelInboundHandler<FullHttpRe
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest msg) throws Exception {
         // 获取FlyHttpRequest
         FlyHttpRequest flyHttpRequest=new FlyHttpRequest(msg);
+        // 测试session
+        Session session = flyHttpRequest.getSession(true);
+        System.out.println(session.getId());
         // 调用过滤器
 
         // 调用拦截器
@@ -54,11 +58,10 @@ public class FlyHttpServerHandler extends SimpleChannelInboundHandler<FullHttpRe
         // 获取Http响应
 
         // 发送http响应
-
         FullHttpResponse response = new DefaultFullHttpResponse(msg.protocolVersion(), OK,
                 Unpooled.wrappedBuffer("Hello, Welcome Wto Netty Server !!! ".getBytes()));
         response.headers()
-                .set(CONTENT_TYPE, "text/plain;charset=utf-8");
+                .set(CONTENT_TYPE, "text/plain;charset=utf-8").set(SET_COOKIE,Session.COOKIE_NAME+"="+session.getId());
         sendResponse(ctx,msg,true,response);
     }
 }

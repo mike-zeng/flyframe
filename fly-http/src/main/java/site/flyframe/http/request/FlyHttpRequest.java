@@ -6,10 +6,7 @@ import site.flyframe.http.server.parser.HttpParser;
 import site.flyframe.http.server.parser.HttpRequestParser;
 import site.flyframe.http.utils.HttpUtil;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author zeng
@@ -91,6 +88,7 @@ public class FlyHttpRequest {
     private void basicInfoInit(){
         this.context= FlyHttpContext.getFlyHttpContext();
         this.attributeMap=new HashMap<String, Object>(16);
+        this.cookies=new ArrayList<Cookie>();
         url=request.uri();
         methodName=request.method().name();
     }
@@ -101,7 +99,8 @@ public class FlyHttpRequest {
     private void cookiesInit(){
         if (request.headers()!=null) {
             ServerCookieDecoder cookieDecoder= ServerCookieDecoder.STRICT;
-            String cookiesStr=request.headers().get("Cookies");
+            String cookiesStr=request.headers().get("Cookie");
+
             if (cookiesStr!=null) {
                 Set<io.netty.handler.codec.http.cookie.Cookie> cookies = cookieDecoder.decode(cookiesStr);
                 for (io.netty.handler.codec.http.cookie.Cookie cookie : cookies) {
@@ -165,7 +164,8 @@ public class FlyHttpRequest {
     }
 
     public Session getSession(boolean isCreate){
-        if (!isCreate){
+
+        if (session!=null||!isCreate){
             return session;
         }
         // 随机生成一个SessionId
