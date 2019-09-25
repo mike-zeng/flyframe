@@ -11,7 +11,7 @@ import org.junit.Test;
 public class FlyHttpServerTest {
     @Test
     public void startServer() throws Exception {
-        FlyHttpServer flyHttpServer = FlyHttpServer.getInstance(8080);
+        FlyHttpServer flyHttpServer = FlyHttpServer.getInstance(8081);
         flyHttpServer.start();
     }
 

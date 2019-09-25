@@ -17,6 +17,9 @@ import java.util.*;
  */
 public class FlyHttpRequest {
 
+    /**
+     * netty提供的HttpRequest
+     */
     private FullHttpRequest request=null;
 
     /**
@@ -64,6 +67,11 @@ public class FlyHttpRequest {
      */
     HashMap<String,Object> attributeMap=new HashMap<String, Object>();
 
+    /**
+     * 是否保持KeepLive
+     */
+    boolean keepAlive=true;
+
     public FlyHttpRequest(){}
 
     public FlyHttpRequest(FullHttpRequest request){
@@ -71,6 +79,9 @@ public class FlyHttpRequest {
         init();
     }
 
+    /**
+     * 初始化HttpRequest的信息
+     */
     private void init(){
         // 1. 初始化基础信息
         basicInfoInit();
@@ -86,6 +97,7 @@ public class FlyHttpRequest {
      * 基础的信息初始化
      */
     private void basicInfoInit(){
+        this.keepAlive=request.protocolVersion().isKeepAliveDefault();
         this.context= FlyHttpContext.getFlyHttpContext();
         this.attributeMap=new HashMap<String, Object>(16);
         this.cookies=new ArrayList<Cookie>();
@@ -159,23 +171,55 @@ public class FlyHttpRequest {
         return heads;
     }
 
+    /**
+     * 获取Session，如果不存在，不创建一个新的Session
+     * @return
+     */
     public Session getSession() {
         return getSession(false);
     }
 
+    /**
+     * 获取Session，根据参数决定是否创建Session
+     * @param isCreate 是否创建
+     * @return Session
+     */
     public Session getSession(boolean isCreate){
-
         if (session!=null||!isCreate){
             return session;
         }
+        session=createSession();
+        context.putSession(session);
+        return session;
+    }
+
+    /**
+     * 创建一个Session,但是该Session不会被存放在全局上下问环境
+     * @return Session
+     */
+    private Session createSession(){
         // 随机生成一个SessionId
         String sessionId;
-        while (context.getSession(sessionId= HttpUtil.produceSessionId())!=null){ }
-
+        do{
+            sessionId=HttpUtil.produceSessionId();
+        }while (context.getSession(sessionId)!=null);
         // 创建session并保存
         session=new Session();
         session.setId(sessionId);
-        context.putSession(session);
         return session;
+    }
+
+    public String getParameter(String name){
+        Object o = parameterMap.get(name);
+        if (o instanceof String){
+            return ((String) o);
+        }else if (o instanceof List){
+            return ((List) o).get(0).toString();
+        }
+        return null;
+    }
+
+    public boolean isKeepAlive() {
+        return keepAlive;
     }
 }

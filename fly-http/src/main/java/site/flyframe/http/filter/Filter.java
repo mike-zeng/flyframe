@@ -1,7 +1,7 @@
 package site.flyframe.http.filter;
 
 import site.flyframe.http.request.FlyHttpRequest;
-import site.flyframe.http.server.FlyHttpResponse;
+import site.flyframe.http.response.FlyHttpResponse;
 
 /**
  * @author zeng
