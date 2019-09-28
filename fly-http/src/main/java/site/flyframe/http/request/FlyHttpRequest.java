@@ -2,6 +2,9 @@ package site.flyframe.http.request;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
+import site.flyframe.http.context.FlyHttpContext;
+import site.flyframe.http.request.conversation.Cookie;
+import site.flyframe.http.request.conversation.Session;
 import site.flyframe.http.server.parser.HttpParser;
 import site.flyframe.http.server.parser.HttpRequestParser;
 import site.flyframe.http.utils.HttpUtil;
@@ -102,6 +105,14 @@ public class FlyHttpRequest {
         this.attributeMap=new HashMap<String, Object>(16);
         this.cookies=new ArrayList<Cookie>();
         url=request.uri();
+        switch (request.method().name()){
+            case "POST":method=FlyHttpMethod.POST;break;
+            case "GET":method=FlyHttpMethod.GET;break;
+            case "DELETE":method=FlyHttpMethod.DELETE;break;
+            case "PUT":method=FlyHttpMethod.PUT;break;
+            default:method=FlyHttpMethod.DEFAULT;
+        }
+        System.out.println(request.method().name());
         methodName=request.method().name();
     }
 
@@ -217,6 +228,14 @@ public class FlyHttpRequest {
             return ((List) o).get(0).toString();
         }
         return null;
+    }
+
+    public FlyHttpMethod getMethod() {
+        return method;
+    }
+
+    public void setMethod(FlyHttpMethod method) {
+        this.method = method;
     }
 
     public boolean isKeepAlive() {

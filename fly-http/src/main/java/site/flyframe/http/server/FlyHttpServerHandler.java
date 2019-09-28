@@ -3,9 +3,9 @@ package site.flyframe.http.server;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.FullHttpRequest;
+import site.flyframe.http.context.FlyHttpContext;
+import site.flyframe.http.forwarder.HttpForwarder;
 import site.flyframe.http.request.FlyHttpRequest;
-import site.flyframe.http.response.FlyHttpResponse;
-import site.flyframe.http.response.FlyHttpResponseSender;
 
 /**
  * @author zeng
@@ -15,20 +15,29 @@ import site.flyframe.http.response.FlyHttpResponseSender;
  */
 public class FlyHttpServerHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
+    @Override
+    public boolean acceptInboundMessage(Object msg) throws Exception {
+        return super.acceptInboundMessage(msg);
+    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest msg) throws Exception {
         // 创建request和response
         FlyHttpRequest request=new FlyHttpRequest(msg);
-        FlyHttpResponse response=new FlyHttpResponse();
 
+        System.out.println(request.getUrl());
+        System.out.println(request.getSession(true).getId());
         // 调用过滤器
 
         // 调用拦截器
 
         // 获取处理该请求的方法
+        HttpForwarder forwarder= FlyHttpContext.getFlyHttpContext().getForwarder();
+        forwarder.forwarder(ctx,request);
+    }
 
-        // 发送响应给客户端
-        FlyHttpResponseSender.sendResponse(ctx,request,true,response);
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
     }
 }

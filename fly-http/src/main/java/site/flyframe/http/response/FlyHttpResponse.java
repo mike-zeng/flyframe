@@ -2,7 +2,7 @@ package site.flyframe.http.response;
 
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
-import site.flyframe.http.request.Cookie;
+import site.flyframe.http.request.conversation.Cookie;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package site.flyframe.http.annotation;
+package site.flyframe.mvc.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

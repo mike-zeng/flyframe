@@ -14,6 +14,7 @@
         <module>fly-aop</module>
         <module>fly-mvc</module>
         <module>fly-rpc</module>
+        <module>fly-data</module>
     </modules>
     <dependencies>
         <!-- https://mvnrepository.com/artifact/junit/junit -->
