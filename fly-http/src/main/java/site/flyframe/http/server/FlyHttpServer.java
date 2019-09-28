@@ -10,6 +10,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import org.apache.log4j.Logger;
 import site.flyframe.http.exception.HttpServerException;
 
 /**
@@ -19,6 +20,7 @@ import site.flyframe.http.exception.HttpServerException;
  * @Date 2019/9/19 21:30
  */
 public class FlyHttpServer {
+    private static Logger logger=Logger.getLogger(FlyHttpServer.class);
     private static final int MAX_PORT=65535;
     private static final int MIN_PORT=0;
     private int port;
@@ -65,6 +67,7 @@ public class FlyHttpServer {
         }finally {
             boss.shutdownGracefully();
             work.shutdownGracefully();
+            logger.info("server shut down successfully");
         }
     }
 }

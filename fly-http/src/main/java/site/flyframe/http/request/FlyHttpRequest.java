@@ -102,9 +102,10 @@ public class FlyHttpRequest {
     private void basicInfoInit(){
         this.keepAlive=request.protocolVersion().isKeepAliveDefault();
         this.context= FlyHttpContext.getFlyHttpContext();
-        this.attributeMap=new HashMap<String, Object>(16);
-        this.cookies=new ArrayList<Cookie>();
-        url=request.uri();
+        this.attributeMap= new HashMap<>(16);
+        this.cookies= new ArrayList<>();
+        this.url=request.uri().split("\\?")[0];
+
         switch (request.method().name()){
             case "POST":method=FlyHttpMethod.POST;break;
             case "GET":method=FlyHttpMethod.GET;break;
@@ -112,7 +113,6 @@ public class FlyHttpRequest {
             case "PUT":method=FlyHttpMethod.PUT;break;
             default:method=FlyHttpMethod.DEFAULT;
         }
-        System.out.println(request.method().name());
         methodName=request.method().name();
     }
 

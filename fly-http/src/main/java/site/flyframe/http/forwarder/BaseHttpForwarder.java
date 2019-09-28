@@ -33,6 +33,7 @@ public abstract class BaseHttpForwarder implements HttpForwarder{
     protected abstract void doForwarder(FlyHttpRequest request, FlyHttpResponse response) throws Exception;
 
     private void finish(ChannelHandlerContext ctx,FlyHttpRequest request, FlyHttpResponse response){
+        response.updateSessionId(request.getSession(false));
         FlyHttpResponseSender.sendResponse(ctx,request,true,response);
     }
 }

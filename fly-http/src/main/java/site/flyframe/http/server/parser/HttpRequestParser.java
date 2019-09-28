@@ -18,7 +18,7 @@ import java.util.Map;
  * @Date 2019/9/19 22:35
  */
 public class HttpRequestParser implements HttpParser {
-    FullHttpRequest request;
+    private FullHttpRequest request;
 
     private static final String UN_LEN_CODED="x-www-form-urlencoded";
     private static final String JSON="application/json";
@@ -27,6 +27,7 @@ public class HttpRequestParser implements HttpParser {
         this.request=request;
     }
 
+    @Override
     public Map<String, Object> parser() {
 
         Map<String,Object> ret=new HashMap<String, Object>();

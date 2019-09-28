@@ -1,5 +1,7 @@
 package site.flyframe.http.utils;
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.JarURLConnection;
@@ -18,6 +20,7 @@ import java.util.jar.JarFile;
  * @Date 2019/9/11 20:15
  */
 public class ReflectionUtil {
+    private static Logger logger=Logger.getLogger(ReflectionUtil.class);
     private ReflectionUtil() {}
 
     /**
@@ -78,20 +81,19 @@ public class ReflectionUtil {
                                                     .forName(packageName + '.'
                                                             + className));
                                         } catch (ClassNotFoundException e) {
-                                            // log
-                                            e.printStackTrace();
+                                            logger.error(e.getMessage());
                                         }
                                     }
                                 }
                             }
                         }
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.error(e.getMessage());
                     }
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("The process of scanning the class has an exception"+e.getMessage());
         }
         return classes;
     }

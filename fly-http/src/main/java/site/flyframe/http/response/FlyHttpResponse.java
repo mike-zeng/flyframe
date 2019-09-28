@@ -3,6 +3,7 @@ package site.flyframe.http.response;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.*;
 import site.flyframe.http.request.conversation.Cookie;
+import site.flyframe.http.request.conversation.Session;
 
 import java.util.List;
 
@@ -59,6 +60,13 @@ public class FlyHttpResponse {
         headers.set(SET_COOKIE,cookie.name()+"="+cookie.value());
     }
 
+    public void updateSessionId(Session session){
+        if (session==null){
+            return;
+        }
+        final String id = session.getId();
+        setHeader("Set-Cookie",Session.COOKIE_NAME+"="+id);
+    }
 
     /**
      * 之前的方法仅仅缓存了参数信息，并未构造一个真正可被发送的响应
