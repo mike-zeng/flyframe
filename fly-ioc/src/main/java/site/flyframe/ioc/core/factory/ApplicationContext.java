@@ -1,7 +1,9 @@
-package site.flyframe.ioc.factory;
+package site.flyframe.ioc.core.factory;
 
+import lombok.extern.slf4j.Slf4j;
 import site.flyframe.ioc.annotation.Autowired;
 import site.flyframe.ioc.annotation.AutowiredEnum;
+import site.flyframe.ioc.core.BeanPostProcessor;
 import site.flyframe.ioc.exception.BeanFactoryException;
 import site.flyframe.ioc.exception.InjectionException;
 import site.flyframe.ioc.exception.enums.BeanFactoryExceptionEnum;
@@ -14,7 +16,6 @@ import site.flyframe.ioc.utils.StringUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,31 +25,41 @@ import java.util.Map;
 /**
  * @author zeng
  * @Classname ApplicationContext
- * @Description TODO
+ * @Description flyframe应用上下文，提供一个基于注解扫描的IoC容器
  * @Date 2019/9/10 22:28
  */
+@Slf4j
 public class ApplicationContext extends BaseBeanFactory {
 
     ApplicationContext(List<String> scannerPackageList) throws Exception {
         super(scannerPackageList);
+        log.info("run success");
     }
 
     @Override
     Object doGetBean(String beanName) {
+        // 查找该beanName对应的BeanDefinition是否存在
         if (beanNameBeanDefinitionMap.get(beanName)==null){
+            log.info("can not find this bean by beanName"+beanName);
             return null;
         }
+
+        // 判断单例缓冲中是否存在该bean
         if (singletonCache.getBeanForBeanName(beanName)!=null){
             return singletonCache.getBeanForBeanName(beanName);
         }
+
+        // 获取beanName对应的BeanDefinition
         BeanDefinition beanDefinition = beanNameBeanDefinitionMap.get(beanName);
         if (beanDefinition!=null){
             Object o = null;
             try {
+                // 将beanDefinition解析为bean对象
                 o = parserBeanDefinitionToObject(beanDefinition);
             } catch (BeanFactoryException e) {
                 e.printStackTrace();
             }
+            // 如果该bean为单例则加入到单例缓存中
             if (beanDefinition.isSingleton()){
                 singletonCache.putBean(beanName,o);
             }
@@ -60,52 +71,94 @@ public class ApplicationContext extends BaseBeanFactory {
 
     @Override
     <T> T doGetBean(Class<T> tClass) {
+        // 查找改类型对应的BeanDefinition
         if (!beanClassBeanDefinitionMap.containsKey(tClass)){
             return null;
         }
+        // 判断单例缓冲中是否存在该bean
         if (singletonCache.getBeanForBeanClass(tClass)!=null){
             return singletonCache.getBeanForBeanClass(tClass);
         }
+        // 获取该Class对应的BeanDefinition
         BeanDefinition definition = beanClassBeanDefinitionMap.get(tClass);
         Object o;
         try {
+            // 将BeanDefinition解析为对象
             o = parserBeanDefinitionToObject(definition);
         } catch (BeanFactoryException e) {
             e.printStackTrace();
             return null;
         }
+        // 放入单例缓存中
         if (definition.isSingleton()){
-            singletonCache.putBean((T)(o));
+            singletonCache.putBean((o));
         }
         return (T) o;
     }
 
+    /**
+     * 将BeanDefinition解析成java bean对象
+     * @param beanDefinition BeanDefinition
+     * @return 对象
+     * @throws BeanFactoryException BeanDefinition异常
+     */
     private Object parserBeanDefinitionToObject(BeanDefinition beanDefinition) throws BeanFactoryException {
         try {
             // 创建对象
             Object object = createObject(beanDefinition);
-
+            if (object==null){
+                return null;
+            }
             List<Depend> depends = beanDefinition.getDepends();
             setMethodInjection(object,depends);
+
             // 进行Autowired注入
             autowiredInjection(object,depends);
+
             // 进行value注入
             valueInjection(object,depends);
+
+            // 执行BeanPostProcessor的beforeInitMethodInvoke方法
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                object=beanPostProcessor.beforeInitMethodInvoke(object,beanDefinition.getBeanName());
+            }
+
+            // 调用init方法
+            invokeInitMethod(object,beanDefinition);
+
+            // 执行BeanPostProcessor的afterInitMethodInvoke方法
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                object=beanPostProcessor.afterInitMethodInvoke(object,beanDefinition.getBeanName());
+            }
             return object;
         }catch (Exception e) {
+            log.error("bean definition parser failed");
             throw new BeanFactoryException(BeanFactoryExceptionEnum.BEAN_DEFINITION_PARSER_FAILED);
         }
     }
+
+    private void invokeInitMethod(Object target,BeanDefinition beanDefinition) throws BeanFactoryException {
+        try {
+            String initMethod = beanDefinition.getInitMethod();
+            if (initMethod==null||"".equals(initMethod)){
+                return;
+            }
+            Method method = beanDefinition.getBeanClass().getMethod(initMethod);
+            method.invoke(method);
+        }catch (Exception e){
+            log.error("the init method of bean invoke fail");
+            throw new BeanFactoryException(BeanFactoryExceptionEnum.BEAN_DEFINITION_PARSER_FAILED);
+        }
+    }
+
 
     /**
      * 构造对象
      * @param beanDefinition BeanDefinition
      * @return 创建的对象
-     * @throws IllegalAccessException
-     * @throws InvocationTargetException
-     * @throws InstantiationException
+     * @throws Exception 创建对象异常
      */
-    private Object createObject(BeanDefinition beanDefinition) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+    private Object createObject(BeanDefinition beanDefinition) throws Exception{
         // 使用空参构造方法创建对象
         Constructor<?>[] constructors = beanDefinition.getBeanClass().getConstructors();
         if (beanDefinition.getBeanClass().getConstructors().length==1&&beanDefinition.getBeanClass().getConstructors()[0].getParameterCount()==0){
@@ -133,22 +186,29 @@ public class ApplicationContext extends BaseBeanFactory {
             if (depend==null){
                 continue;
             }
-            List<String> parameters=(List<String>)depend.getDependValue();
+            List parameters=null;
+
+            if (depend.getDependValue() instanceof List){
+                parameters=(List)depend.getDependValue();
+            }
+            if (parameters==null){
+                continue;
+            }
             // 判断参数是否都存在
             int count=0;
-            for (String parameter : parameters) {
-               if (!beanNameBeanDefinitionMap.containsKey(parameter)){
-                   break;
-               }
-               count++;
+            for (Object parameter : parameters) {
+                if (!beanNameBeanDefinitionMap.containsKey(parameter.toString())){
+                    break;
+                }
+                count++;
             }
             // 找到了合适的构造方法,构造出参数对象
             List<Object> args=new ArrayList<>();
             if (count==parameters.size()){
-                for (String parameter : parameters) {
+                for (Object  parameter : parameters) {
                     Object o = null;
                     try {
-                        o = parserBeanDefinitionToObject(beanNameBeanDefinitionMap.get(parameter));
+                        o = parserBeanDefinitionToObject(beanNameBeanDefinitionMap.get(parameter.toString()));
                     } catch (BeanFactoryException e) {
                         e.printStackTrace();
                     }
@@ -170,10 +230,8 @@ public class ApplicationContext extends BaseBeanFactory {
      * 通过set方法注入
      * @param target 目标对象
      * @param depends set类型的依赖
-     * @throws InvocationTargetException
-     * @throws IllegalAccessException
      */
-    private void setMethodInjection(Object target,List<Depend> depends) throws InvocationTargetException, IllegalAccessException {
+    private void setMethodInjection(Object target,List<Depend> depends) {
         List<Depend> setDepend = filterDependsByDependType(depends, DependEnum.SET);
         // 获取所有set方法
         Method[] methods = target.getClass().getDeclaredMethods();
@@ -189,7 +247,8 @@ public class ApplicationContext extends BaseBeanFactory {
         // 进行set注入
         for (Depend depend : setDepend) {
             Method method = methodMap.get(depend.getDependKey());
-            BeanDefinition definition = beanNameBeanDefinitionMap.get(depend.getDependValue());
+            Object dependValue = depend.getDependValue();
+            BeanDefinition definition = beanNameBeanDefinitionMap.get(dependValue.toString());
             if (method!=null&&definition!=null){
                 Object arg = null;
                 try {
@@ -197,7 +256,12 @@ public class ApplicationContext extends BaseBeanFactory {
                 } catch (BeanFactoryException e) {
                     e.printStackTrace();
                 }
-                method.invoke(target,arg);
+                try {
+                    method.invoke(target,arg);
+                } catch (Exception e) {
+                    log.warn("set Injection my fail when invoke "+method.getName()+" with "+target.getClass().getName());
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -245,8 +309,8 @@ public class ApplicationContext extends BaseBeanFactory {
     }
     /**
      * 通过Autowired注解注入
-     * @param target
-     * @param depends
+     * @param target 目标对象
+     * @param depends 依赖
      */
     private void autowiredInjection(Object target,List<Depend> depends) throws InjectionException {
         try {
@@ -257,7 +321,7 @@ public class ApplicationContext extends BaseBeanFactory {
             for (Depend depend : autowiredDepends) {
                 Field declaredField = target.getClass().getDeclaredField(depend.getDependKey());
                 declaredField.setAccessible(true);
-                BeanDefinition beanDefinition=null;
+                BeanDefinition beanDefinition;
                 // 判断注入的类型
                 Autowired annotation = declaredField.getAnnotation(Autowired.class);
                 if (annotation==null){

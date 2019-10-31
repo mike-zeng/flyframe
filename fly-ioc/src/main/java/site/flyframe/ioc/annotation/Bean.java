@@ -8,11 +8,11 @@ import java.lang.annotation.Target;
 /**
  * @author zeng
  * @Classname Bean
- * @Description TODO
+ * @Description
  * @Date 2019/9/11 21:44
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
+@Target(ElementType.ANNOTATION_TYPE)
 public @interface Bean{
 
 }

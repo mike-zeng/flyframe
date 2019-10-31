@@ -1,4 +1,4 @@
-package site.flyframe.ioc.factory;
+package site.flyframe.ioc.core.factory;
 
 import org.junit.Before;
 import org.junit.Test;

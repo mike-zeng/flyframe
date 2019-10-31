@@ -14,6 +14,15 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface Autowired {
+    /**
+     * 自动注入类型，默认按照类型注入
+     * @return 注入类型
+     */
     AutowiredEnum type() default AutowiredEnum.BY_TYPE;
+
+    /**
+     * 如果注入类型为BY_NAME,则该属性生效，表示参考的bean名称
+     * @return bean名称
+     */
     String beanName()default "";
 }

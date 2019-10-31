@@ -1,15 +1,16 @@
-package site.flyframe.ioc.factory;
+package site.flyframe.ioc.core.factory;
 
-import site.flyframe.ioc.annotation.Component;
-import site.flyframe.ioc.annotation.Service;
+import site.flyframe.ioc.annotation.Bean;
 import site.flyframe.ioc.annotation.Value;
 import site.flyframe.ioc.cache.Cache;
 import site.flyframe.ioc.cache.SingletonCache;
+import site.flyframe.ioc.core.BeanPostProcessor;
+import site.flyframe.ioc.core.scanner.PackageScanner;
+import site.flyframe.ioc.core.scanner.Scanner;
 import site.flyframe.ioc.meta.BeanDefinition;
 import site.flyframe.ioc.meta.Depend;
 import site.flyframe.ioc.meta.DependEnum;
-import site.flyframe.ioc.scanner.PackageScanner;
-import site.flyframe.ioc.scanner.Scanner;
+import site.flyframe.ioc.meta.factory.DefaultBeanDefinitionFactory;
 import site.flyframe.ioc.utils.StringUtil;
 
 import java.lang.annotation.Annotation;
@@ -31,8 +32,13 @@ public abstract class BaseBeanFactory implements Factory{
     private boolean destroy=false;
     private Scanner scanner;
 
+    private DefaultBeanDefinitionFactory defaultBeanDefinitionFactory=new DefaultBeanDefinitionFactory();
+
     ConcurrentHashMap<String,BeanDefinition> beanNameBeanDefinitionMap=new ConcurrentHashMap<String, BeanDefinition>();
     ConcurrentHashMap<Class<?>,BeanDefinition> beanClassBeanDefinitionMap=new ConcurrentHashMap<Class<?>, BeanDefinition>();
+
+    List<BeanPostProcessor> beanPostProcessorList=new ArrayList<>();
+
     Cache singletonCache=new SingletonCache();
 
     BaseBeanFactory(List<String> scannerPackageList) throws Exception {
@@ -84,39 +90,42 @@ public abstract class BaseBeanFactory implements Factory{
     private List<BeanDefinition> converterBeanClassToBeanDefinition(List<Class<?>> classes){
         List<BeanDefinition> beanDefinitions=new ArrayList<BeanDefinition>(classes.size());
         for (Class<?> aClass : classes) {
-            beanDefinitions.add(converterBeanClassToBeanDefinition(aClass));
+            BeanDefinition beanDefinition = converterBeanClassToBeanDefinition(aClass);
+            beanDefinitions.add(beanDefinition);
         }
         return beanDefinitions;
     }
 
+    private boolean checkBeanAnnotation(Annotation annotation){
+        if (annotation==null){
+            return false;
+        }
+        Annotation[] declaredAnnotations = annotation.annotationType().getDeclaredAnnotations();
+        for (Annotation declaredAnnotation : declaredAnnotations) {
+            if (declaredAnnotation instanceof Bean){
+                return true;
+            }
+        }
+        return false;
+    }
     /**
      * 将Class对象转化成BeanDefinition对象
      * @param aClass Class对象
      * @return BeanDefinition对象
      */
     private BeanDefinition converterBeanClassToBeanDefinition(Class<?> aClass){
-        Annotation[] annotations = aClass.getAnnotations();
-        BeanDefinition beanDefinition=new BeanDefinition();
-        beanDefinition.setBeanClass(aClass);
+        BeanDefinition beanDefinition=null;
 
-        Component component = aClass.getAnnotation(Component.class);
-        Service service=aClass.getAnnotation(Service.class);
-        if (component!=null){
-            beanDefinition.setLazy(component.lazy());
-            if (!"".equals(component.beanName())){
-                beanDefinition.setBeanName(component.beanName());
-            }else{
-                beanDefinition.setBeanName(StringUtil.classNameToDefaultBeanName(aClass.getSimpleName()));
+        Annotation[] annotations = aClass.getAnnotations();
+        for (Annotation annotation : annotations) {
+            if (checkBeanAnnotation(annotation)){
+                // 使用工厂模式来创建BeanDefinition
+                beanDefinition =defaultBeanDefinitionFactory.createBeanDefinition(annotation, aClass);
+                break;
             }
-            beanDefinition.setSingleton(component.singleton());
-        } else if (service!=null) {
-            beanDefinition.setLazy(service.lazy());
-            if (!"".equals(service.beanName())){
-                beanDefinition.setBeanName(service.beanName());
-            }else{
-                beanDefinition.setBeanName(StringUtil.classNameToDefaultBeanName(aClass.getSimpleName()));
-            }
-            beanDefinition.setSingleton(service.singleton());
+        }
+        if (beanDefinition==null){
+            return null;
         }
         // 设置依赖关系
         List<Depend> dependList=new ArrayList<>();

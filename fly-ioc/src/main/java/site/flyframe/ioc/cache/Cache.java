@@ -22,8 +22,16 @@ public interface Cache {
      */
     <T> T getBeanForBeanClass(Class<T> tClass);
 
-
+    /**
+     * 将bean放入缓存中
+     * @param o bean对象
+     */
     void putBean(Object o);
 
+    /**
+     * 将bean放入缓存中
+     * @param beanName bean的名称
+     * @param o bean对象
+     */
     void putBean(String beanName,Object o);
 }

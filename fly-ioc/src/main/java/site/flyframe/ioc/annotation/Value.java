@@ -14,5 +14,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD,ElementType.PARAMETER})
 public @interface Value {
+    /**
+     * @return 值
+     */
     String[] value()default "";
 }

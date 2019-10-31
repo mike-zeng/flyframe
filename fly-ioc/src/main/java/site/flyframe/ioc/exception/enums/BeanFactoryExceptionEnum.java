@@ -10,7 +10,7 @@ public enum BeanFactoryExceptionEnum {
     /**
      * BeanDefinition解析失败
      */
-    BEAN_DEFINITION_PARSER_FAILED("BeanDefinition解析失败");
+    BEAN_DEFINITION_PARSER_FAILED("bean definition parser failed");
     private String msg;
 
     BeanFactoryExceptionEnum(String msg){

@@ -15,6 +15,7 @@
         <module>fly-mvc</module>
         <module>fly-rpc</module>
         <module>fly-data</module>
+        <module>fly-bootstrap</module>
     </modules>
     <dependencies>
         <!-- https://mvnrepository.com/artifact/junit/junit -->
@@ -24,7 +25,24 @@
             <version>4.12</version>
             <scope>site.flyframe.ioc.test</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/log4j/log4j -->
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.25</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
+        </dependency>
     </dependencies>
 
 </project>

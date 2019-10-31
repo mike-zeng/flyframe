@@ -1,5 +1,7 @@
 package site.flyframe.ioc.meta;
 
+import lombok.Data;
+
 import java.util.List;
 
 /**
@@ -8,6 +10,7 @@ import java.util.List;
  * @Description 描述容器中bean的基本信息
  * @Date 2019/9/10 22:26
  */
+@Data
 public class BeanDefinition {
     /**
      * bean的名称
@@ -34,43 +37,13 @@ public class BeanDefinition {
      */
     private List<Depend> depends;
 
-    public String getBeanName() {
-        return beanName;
-    }
+    /**
+     * bean创建时调用
+     */
+    private String initMethod;
 
-    public void setBeanName(String beanName) {
-        this.beanName = beanName;
-    }
-
-    public Class<?> getBeanClass() {
-        return beanClass;
-    }
-
-    public void setBeanClass(Class<?> beanClass) {
-        this.beanClass = beanClass;
-    }
-
-    public boolean isLazy() {
-        return lazy;
-    }
-
-    public void setLazy(boolean lazy) {
-        this.lazy = lazy;
-    }
-
-    public boolean isSingleton() {
-        return singleton;
-    }
-
-    public void setSingleton(boolean singleton) {
-        this.singleton = singleton;
-    }
-
-    public List<Depend> getDepends() {
-        return depends;
-    }
-
-    public void setDepends(List<Depend> depends) {
-        this.depends = depends;
-    }
+    /**
+     * 容器关闭时调用
+     */
+    private String destroyMethod;
 }

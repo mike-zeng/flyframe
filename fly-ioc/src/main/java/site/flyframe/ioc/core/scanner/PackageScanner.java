@@ -1,7 +1,6 @@
-package site.flyframe.ioc.scanner;
+package site.flyframe.ioc.core.scanner;
 
-import site.flyframe.ioc.annotation.Component;
-import site.flyframe.ioc.annotation.Service;
+import site.flyframe.ioc.annotation.Bean;
 import site.flyframe.ioc.utils.ReflectionUtil;
 
 import java.lang.annotation.Annotation;
@@ -57,13 +56,12 @@ public class PackageScanner extends BasePackageScanner {
      * @return 是否返回
      */
     private boolean filter(Annotation annotation){
-        return annotation instanceof Component||annotation instanceof Service;
-//        Annotation[] annotations = site.flyframe.ioc.annotation.getClass().getAnnotations();
-//        for (Annotation an : annotations) {
-//            if (an instanceof Bean){
-//                return true;
-//            }
-//        }
-//        return false;
+        Annotation[] declaredAnnotations = annotation.annotationType().getDeclaredAnnotations();
+        for (Annotation declaredAnnotation : declaredAnnotations) {
+            if (declaredAnnotation instanceof Bean){
+                return true;
+            }
+        }
+        return false;
     }
 }

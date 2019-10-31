@@ -1,4 +1,4 @@
-package site.flyframe.ioc.scanner;
+package site.flyframe.ioc.core.scanner;
 
 import java.util.List;
 
