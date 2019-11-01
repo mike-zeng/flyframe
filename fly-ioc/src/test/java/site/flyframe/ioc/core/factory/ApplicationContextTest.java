@@ -80,7 +80,8 @@ public class ApplicationContextTest {
 
     @Test
     public void doGetBean() {
-
+        ServiceTest serviceTest=factory.getBean(ServiceTest.class);
+        serviceTest.doService();
     }
 
     @Test

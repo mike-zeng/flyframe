@@ -38,5 +38,5 @@ public @interface Service {
     /**
      * @return 销毁方法
      */
-    String destroy() default "";
+    String destroyMethod() default "";
 }

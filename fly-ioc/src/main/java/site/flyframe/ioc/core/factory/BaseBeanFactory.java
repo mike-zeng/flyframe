@@ -4,6 +4,7 @@ import site.flyframe.ioc.annotation.Bean;
 import site.flyframe.ioc.annotation.Value;
 import site.flyframe.ioc.cache.Cache;
 import site.flyframe.ioc.cache.SingletonCache;
+import site.flyframe.ioc.core.BeanFactoryProcessor;
 import site.flyframe.ioc.core.BeanPostProcessor;
 import site.flyframe.ioc.core.scanner.PackageScanner;
 import site.flyframe.ioc.core.scanner.Scanner;
@@ -39,6 +40,8 @@ public abstract class BaseBeanFactory implements Factory{
 
     List<BeanPostProcessor> beanPostProcessorList=new ArrayList<>();
 
+    private List<BeanFactoryProcessor> beanFactoryProcessorList=new ArrayList<>();
+
     Cache singletonCache=new SingletonCache();
 
     BaseBeanFactory(List<String> scannerPackageList) throws Exception {
@@ -51,7 +54,12 @@ public abstract class BaseBeanFactory implements Factory{
         if (!verify()){
             throw new Exception();
         }
+        // 处理BeanDefinition
+        for (BeanFactoryProcessor beanFactoryProcessor : beanFactoryProcessorList) {
+            beanFactoryProcessor.postProcessBeanFactory(this);
+        }
     }
+
 
 
     /**
@@ -69,6 +77,18 @@ public abstract class BaseBeanFactory implements Factory{
         for (BeanDefinition beanDefinition : beanDefinitions) {
             beanNameBeanDefinitionMap.put(beanDefinition.getBeanName(),beanDefinition);
             beanClassBeanDefinitionMap.put(beanDefinition.getBeanClass(),beanDefinition);
+
+            // 提取bean的后置处理器
+            if(BeanPostProcessor.class.isAssignableFrom(beanDefinition.getBeanClass())){
+                BeanPostProcessor bean = (BeanPostProcessor)getBean(beanDefinition.getBeanName());
+                beanPostProcessorList.add(bean);
+            }
+
+            // 提取bean factory的后置处理器
+            if (BeanFactoryProcessor.class.isAssignableFrom(beanDefinition.getBeanClass())){
+                BeanFactoryProcessor bean=(BeanFactoryProcessor) getBean(beanDefinition.getBeanName());
+                beanFactoryProcessorList.add(bean);
+            }
         }
         // 加载非懒加载的对象
         for (BeanDefinition beanDefinition : beanDefinitions) {

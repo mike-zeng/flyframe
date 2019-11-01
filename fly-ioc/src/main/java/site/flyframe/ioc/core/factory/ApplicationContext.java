@@ -144,7 +144,10 @@ public class ApplicationContext extends BaseBeanFactory {
                 return;
             }
             Method method = beanDefinition.getBeanClass().getMethod(initMethod);
-            method.invoke(method);
+            if (method==null){
+                return;
+            }
+            method.invoke(target);
         }catch (Exception e){
             log.error("the init method of bean invoke fail");
             throw new BeanFactoryException(BeanFactoryExceptionEnum.BEAN_DEFINITION_PARSER_FAILED);

@@ -2,28 +2,20 @@ package site.flyframe.aop.proxy;
 
 import site.flyframe.aop.annotation.AdviseEnum;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.util.List;
+import java.util.Set;
 
 /**
  * 适配器
  */
 public class JDKProxyGeneratorAdaptor implements ProxyGenerator {
-    public JDKProxyGeneratorAdaptor(){
 
-    }
-    public Object generate(Object target, Method method, AdviseEnum type) {
-        Object o = Proxy.newProxyInstance(target.getClass().getClassLoader(), target.getClass().getInterfaces(), new InvocationHandler() {
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-
-                return null;
-            }
-        });
-        return o;
+    public Object generate(Class target, List<Method> methods, Set<Method> adviseMethod, AdviseEnum type) {
+        return null;
     }
 
-    public Class generateClass(Object target, Method method, AdviseEnum type) {
+    public Class generateClass(Class target, Set<Method> methods, Method adviseMethod, AdviseEnum type) {
         return null;
     }
 }
