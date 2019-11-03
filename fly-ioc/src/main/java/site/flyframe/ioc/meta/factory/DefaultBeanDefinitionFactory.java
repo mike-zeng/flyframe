@@ -12,7 +12,8 @@ public class DefaultBeanDefinitionFactory {
             return new ComponentBeanDefinitionFactory().createBeanDefinition(annotation, aClass);
         }else if (annotation instanceof Service){
             return new ServiceBeanDefinitionFactory().createBeanDefinition(annotation,aClass);
+        }else {
+            return new SimplerBeanDefinitionFactory().createBeanDefinition(annotation, aClass);
         }
-        return null;
     }
 }

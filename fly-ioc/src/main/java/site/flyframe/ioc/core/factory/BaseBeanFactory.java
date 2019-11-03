@@ -35,7 +35,10 @@ public abstract class BaseBeanFactory implements Factory{
 
     private DefaultBeanDefinitionFactory defaultBeanDefinitionFactory=new DefaultBeanDefinitionFactory();
 
+    private List<BeanDefinition> beanDefinitions=null;
+
     ConcurrentHashMap<String,BeanDefinition> beanNameBeanDefinitionMap=new ConcurrentHashMap<String, BeanDefinition>();
+
     ConcurrentHashMap<Class<?>,BeanDefinition> beanClassBeanDefinitionMap=new ConcurrentHashMap<Class<?>, BeanDefinition>();
 
     List<BeanPostProcessor> beanPostProcessorList=new ArrayList<>();
@@ -48,7 +51,7 @@ public abstract class BaseBeanFactory implements Factory{
         // 负责从包中扫描出带注解的类，然后转化为BeanDefinition对象
         scanner=new PackageScanner(scannerPackageList);
         List<Class<?>> classes=loadClass();
-        List<BeanDefinition> beanDefinitions=converterBeanClassToBeanDefinition(classes);
+        beanDefinitions=converterBeanClassToBeanDefinition(classes);
         loadBeanDefinition(beanDefinitions);
         // 校验BeanDefinition之间的关系是否符合容器要求
         if (!verify()){
@@ -60,6 +63,9 @@ public abstract class BaseBeanFactory implements Factory{
         }
     }
 
+    public List<BeanDefinition> getBeanDefinitions(){
+        return beanDefinitions;
+    }
 
 
     /**
@@ -95,7 +101,7 @@ public abstract class BaseBeanFactory implements Factory{
            if (!beanDefinition.isLazy()){
                Object o = doGetBean(beanDefinition.getBeanClass());
                // 如果是单例对象则缓存
-               if (beanDefinition.isSingleton()){
+               if (o!=null&&beanDefinition.isSingleton()){
                    singletonCache.putBean(o);
                }
            }

@@ -31,7 +31,7 @@ import java.util.Map;
 @Slf4j
 public class ApplicationContext extends BaseBeanFactory {
 
-    ApplicationContext(List<String> scannerPackageList) throws Exception {
+    public ApplicationContext(List<String> scannerPackageList) throws Exception {
         super(scannerPackageList);
         log.info("run success");
     }

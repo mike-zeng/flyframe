@@ -9,5 +9,5 @@ package site.flyframe.aop.annotation;
  * 5. 环绕通知
  */
 public enum AdviseEnum {
-    BEFORE,AFTER,AFTER_RETURN,EXCEPTION,AROUND;
+    BEFORE,AFTER,AFTER_RETURN,AFTER_THROW,AROUND;
 }

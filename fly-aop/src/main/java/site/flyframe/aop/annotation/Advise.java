@@ -1,8 +1,15 @@
 package site.flyframe.aop.annotation;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * 声明一个方法为通知
  */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
 public @interface Advise {
     /**
      * 枚举类表示的通知类型
@@ -58,8 +65,11 @@ public @interface Advise {
     String methodName()default "*";
 
     /**
-     * 使用字符串表示的匹配表达式= 包匹配表达式 类名匹配表达式 访问权限表达式 返回值类型表达式 方法名表达式
-     * @return 表达式 如何表达式存在，优先使用表达式
+     * @return  方法名匹配表达式，可以指定方法名匹配方式
+     * 1. 指定明确的方法名
+     * 2. + 以该字符串开头的方法名
+     * 3. regp:正则表达式 利用正则表达式匹配方法返回值类型
+     * 4. * 不限定方法名 默认值
      */
-    String match() default "none";
+    String args()default "*";
 }
