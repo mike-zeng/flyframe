@@ -8,7 +8,7 @@ import java.lang.reflect.Modifier;
 /**
  * 用来判断一个对象中的某个方法，是否需要被处理
  */
-public class AspectObjectMatcher {
+class AspectObjectMatcher {
     private String packageName;
     private Class aClass;
     private int accessType;
@@ -17,7 +17,7 @@ public class AspectObjectMatcher {
     private Class[] args;
 
 
-    public boolean match(Advise advise, Object target, Method method){
+    boolean match(Advise advise, Object target, Method method){
         this.packageName=target.getClass().getPackage().getName();
         this.aClass=target.getClass();
         this.accessType=method.getModifiers();

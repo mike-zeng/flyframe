@@ -6,34 +6,33 @@ public class ProxyMethod{
     private InvokeUnit after;
     private InvokeUnit afterReturn;
     private InvokeUnit afterThrow;
-    private ProxyMethod inner;
     private InvokeUnit target;
 
-    Object process() throws Throwable {
-        Object ret=null;
-        System.out.println("=============");
+    private Object retValue;
+
+
+    public Object process() throws Throwable {
         try {
             // before
             invokeIfNotNull(before);
-            if (inner!=null){
-                ret=inner.process();
-            }
             invokeIfNotNull(target);
             // afterReturn
             invokeIfNotNull(afterReturn);
         }catch (Throwable e){
+            e.printStackTrace();
             // afterThrow
             invokeIfNotNull(afterThrow);
         }finally {
             // after
             invokeIfNotNull(after);
         }
-        return ret;
+        return retValue;
     }
 
     private void invokeIfNotNull(InvokeUnit invokeUnit)throws Throwable{
         if (invokeUnit!=null){
             invokeUnit.invoke();
+            retValue=invokeUnit.getRetValue();
         }
     }
 
@@ -49,15 +48,11 @@ public class ProxyMethod{
         this.afterReturn = afterReturn;
     }
 
-    public void setAfterThrow(InvokeUnit afterThrow) {
+    void setAfterThrow(InvokeUnit afterThrow) {
         this.afterThrow = afterThrow;
     }
 
-    void setInner(ProxyMethod inner) {
-        this.inner = inner;
-    }
-
-    public void setTarget(InvokeUnit target) {
+    void setTarget(InvokeUnit target) {
         this.target = target;
     }
 }

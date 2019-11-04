@@ -1,7 +1,5 @@
 package site.flyframe.aop.proxy;
 
-import site.flyframe.aop.util.AspectObjectMatcher;
-
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
@@ -10,8 +8,6 @@ import java.util.Arrays;
  */
 public class ProxyClassContext {
     private ProxyClassGenerateStrategy strategy;
-
-    private AspectObjectMatcher matcher=new AspectObjectMatcher();
 
     public void setStrategy(ProxyClassGenerateStrategy strategy) {
         this.strategy = strategy;

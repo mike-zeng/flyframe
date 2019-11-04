@@ -9,15 +9,19 @@ import java.lang.reflect.Method;
  * 最小执行单元
  */
 @Data
-public class InvokeUnit{
+class InvokeUnit{
     private Object target;
     private Method method;
     private MethodProxy methodProxy;
     private Object[] args;
-    Object invoke() throws Throwable {
+    private Object retValue;
+    void invoke() throws Throwable {
         if (methodProxy!=null){
-            return methodProxy.invokeSuper(target,args);
+            retValue=methodProxy.invokeSuper(target,args);
         }
-        return method.invoke(target,args);
+        if (method==null){
+            return;
+        }
+        method.invoke(target, args);
     }
 }

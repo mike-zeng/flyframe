@@ -1,5 +1,6 @@
 package site.flyframe.aop.proxy;
 
+import lombok.extern.slf4j.Slf4j;
 import net.sf.cglib.proxy.MethodInterceptor;
 import net.sf.cglib.proxy.MethodProxy;
 import site.flyframe.aop.annotation.Advise;
@@ -9,6 +10,7 @@ import site.flyframe.aop.core.AopBeanFactoryProcessor;
 import java.lang.reflect.Method;
 import java.util.List;
 
+@Slf4j
 public class CglibProxyMethodInterceptor implements MethodInterceptor {
 
 
@@ -27,7 +29,7 @@ public class CglibProxyMethodInterceptor implements MethodInterceptor {
      * @param target 代理对象
      * @param args 参数
      * @param methodProxy 被代理的方法
-     * @return
+     * @return 方法的包装对象
      */
     private ProxyMethod getProxyMethod(Object target,Object[] args,MethodProxy methodProxy){
         // 最底层方法
@@ -50,7 +52,20 @@ public class CglibProxyMethodInterceptor implements MethodInterceptor {
             }else if (isAfterThrow(adviseMethod)){
                 proxyMethod.setAfterThrow(wrapInvokeUnit(adviseMethod));
             }else if (isAround(adviseMethod)){
-                System.out.println("--------环绕通知日后再来完成-----------------");
+                // 判断环绕方法是否符合要求
+                Class<?>[] parameterTypes = adviseMethod.getParameterTypes();
+                if (parameterTypes.length==1&&parameterTypes[0]==ProxyMethod.class){
+                    InvokeUnit around = new InvokeUnit();
+                    around.setTarget(AopBeanFactoryProcessor.getAspectMethodObjectHashMap().get(adviseMethod));
+                    around.setMethod(adviseMethod);
+                    Object[] arg={proxyMethod};
+                    around.setArgs(arg);
+                    ProxyMethod temp = new ProxyMethod();
+                    temp.setTarget(around);
+                    proxyMethod=temp;
+                }else {
+                    log.warn("around method may be error,need right args");
+                }
             }
         }
         return proxyMethod;
